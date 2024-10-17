@@ -1,7 +1,7 @@
 // script.js
 
 
-let columnTypesByTableId = {}; // Default to 'String'
+let columnTypesByTableId = ['String(4-7,OrgId)', 'String(36,FieldGuid)', 'String(OperationType)', 'Date']; // Default to 'String'
 let primaryKeyColumnsByTableId = {}; // Stores primary key columns for each table
 let tableCounter = 0;
 
@@ -82,7 +82,7 @@ function resetTable(tableId) {
     createTableButtons(tableId, tableContainer);
 
     // Reset column type and add a new random row
-    columnTypesByTableId[tableId] = ['String', 'String', 'String', 'String']
+    columnTypesByTableId[tableId] = ['String(4-7,OrgId)', 'String(36,FieldGuid)', 'String(OperationType)', 'Date']
     addRow(tableId);
 
 }
@@ -501,7 +501,7 @@ function initializeTable(tableId) {
     tableContainer.className = 'table-container';
     tableContainer.id = tableContainerId; // Use constructed ID
 
-    columnTypesByTableId[tableId] = ['String', 'String', 'String', 'String'];
+    columnTypesByTableId[tableId] = ['String(4-7,OrgId)', 'String(36,FieldGuid)', 'String(OperationType)', 'Date'];
     
     let tableIdActual = tableId;
     let table = document.createElement('table');
@@ -533,27 +533,30 @@ function initializeTable(tableId) {
 
 // Updated createTableButtons function
 function createTableButtons(tableId, tableContainer) {
-
     let buttonsContainer = document.createElement('div');
-    buttonsContainer.className = 'buttons-container'; // This class will be used in the CSS to align the buttons
+    buttonsContainer.className = 'buttons-container';
 
-    // Create and append the "Add Row" button
+    // Add Row button
     let addRowButton = createControlButton('Add Row', () => addRow(tableId), 'addRow');
     buttonsContainer.appendChild(addRowButton);
 
-    // Create and append the "Add Column" button
+    // Add Column button
     let addColumnButton = createControlButton('Add Column', () => addColumn(tableId), 'addColumn');
     buttonsContainer.appendChild(addColumnButton);
 
-    // Create and append the "Customize" button
+    // Customize button
     let customizeButton = createControlButton('Customize', () => showCustomizePopup(tableId), 'customize');
     buttonsContainer.appendChild(customizeButton);
 
-    // Create and append the "Add Table" button
-    let addTableButton = createControlButton('Add Table', () => addTable(tableId), 'addTable');
-    buttonsContainer.appendChild(addTableButton);
+    // Add Remove Row button
+    let removeRowButton = createControlButton('Remove Last Row', () => removeLastRow(tableId), 'removeRow');
+    buttonsContainer.appendChild(removeRowButton);
 
-    
+    // Add Remove Column button
+    let removeColumnButton = createControlButton('Remove Last Column', () => removeLastColumn(tableId), 'removeColumn');
+    buttonsContainer.appendChild(removeColumnButton);
+
+    // Add Relationships button (if this is the last table)
     if (parseInt(tableId, 10) === tableCounter) {
         let addRelationshipsButton = createAddRelationshipsButton();
         buttonsContainer.appendChild(addRelationshipsButton);
@@ -592,7 +595,7 @@ function closeAddRelationPopup() {
 
 
 function addRow(tableId) {
-    console.log('addRow triggered'); // Debugging line
+    console.log('addRow triggered');
     let table = document.getElementById(tableId);
     if (!table) return;
 
@@ -619,7 +622,7 @@ function addRow(tableId) {
 
             isUniqueRow = isUnique(table, newRowData, primaryKeyColumns);
             attempt++;
-            console.log('Attempt:', attempt); // Debugging line
+            console.log('Attempt:', attempt);
         }
     }
 
@@ -638,8 +641,12 @@ function addRow(tableId) {
 // Utility function to generate data based on type
 function generateDataByType(type) {
     switch (type) {
-        case 'String':
-            return generateRandomString(1);
+        case 'String(4-7,OrgId)':
+            return generateRandomStringNumber(4,7);
+        case 'String(36,FieldGuid)':
+            return generateRandomString(36);
+        case 'String(OperationType)':
+            return generateRandomOperation();
         case 'Number':
             return generateRandomNumber(1);
         case 'Date':
@@ -674,6 +681,49 @@ function addColumn(tableId) {
     }
 }
 
+// Function to remove the last row of the table
+function removeLastRow(tableId) {
+    let table = document.getElementById(tableId);
+    if (!table || table.rows.length <= 1) {
+        console.warn("No rows to remove");
+        return; // Skip if there are no rows or only the header row
+    }
+
+    table.deleteRow(table.rows.length - 1); // Delete the last row
+}
+
+// Function to remove the last column of the table
+function removeLastColumn(tableId) {
+    let table = document.getElementById(tableId);
+    if (!table || table.rows[0].cells.length <= 1) {
+        console.warn("No columns to remove");
+        return; // Skip if there are no columns to remove
+    }
+
+    // Remove the last cell from each row (including the header row)
+    for (let i = 0; i < table.rows.length; i++) {
+        table.rows[i].deleteCell(-1);
+    }
+
+    // Update the columnTypesByTableId array to reflect the removal
+    columnTypesByTableId[tableId].pop(); // Remove the last column type
+}
+
+
+function generateRandomStringNumber(minLength, maxLength) {
+    const characters = '0123456789';
+    let result = '';
+    
+    // Generate a random length between minLength and maxLength
+    const length = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
+
+    // Generate a random string of numbers based on the random length
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+}
+
 function generateRandomString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
@@ -683,10 +733,15 @@ function generateRandomString(length) {
     return result;
 }
 
+function generateRandomOperation() {
+    const operations = ['Seeding', 'Tillage', 'Application','Harvest'];
+    return operations[Math.floor(Math.random() * operations.length)];
+}
+
 function generateRandomNumber(length) {
     let result = '';
     for (let i = 0; i < length; i++) {
-        result += Math.floor(Math.random() * 10); // Generates a single digit 0-9
+        result += Math.floor(Math.random() * 100); // Generates a single digit 0-9
     }
     return result;
 }
@@ -701,18 +756,36 @@ function createTypeDropdown(columnNumber, tableId) {
     const select = document.createElement('select');
     select.dataset.tableId = tableId;
 
-    const types = ['String', 'Number', 'Date']; // Add more types as needed
+    // Define the list of types
+    const types = ['Date', 'String(4-7,OrgId)', 'String(36,FieldGuid)', 'String(OperationType)','Number'];
+
+    // Sort types alphabetically if needed (optional)
+    types.sort(); // This will order the options alphabetically
+
+    // Create a proper sequence for default types for each column
+    const defaultTypeOrder = [
+        'Date',                   // Column 0 default
+        'String(4-7,OrgId)',       // Column 1 default
+        'String(36,FieldGuid)',    // Column 2 default
+        'String(OperationType)'    // Column 3 default
+    ];
+
+    // Populate the dropdown with sorted options
     types.forEach(type => {
         const option = document.createElement('option');
         option.value = type;
         option.text = type;
         select.appendChild(option);
     });
-    select.value = 'String';
+
+    // Ensure the default type corresponds to the right columnNumber
+    select.value = defaultTypeOrder[columnNumber] || types[0]; // If columnNumber is out of range, default to first type
+
     select.onchange = changeFieldType; // Function to handle type change
 
     return select;
 }
+
 
 
 function changeFieldType(e) {
@@ -723,7 +796,7 @@ function changeFieldType(e) {
     let newType = e.target.value;
 
     if (!columnTypesByTableId[tableId]) {
-        columnTypesByTableId[tableId] = ['String', 'String', 'String', 'String']; // Default to 'String'
+        columnTypesByTableId[tableId] = ['String(4-7,OrgId)', 'String(36,FieldGuid)', 'String(OperationType)', 'Date','Number']; // Default to 'String'
     }
     
     // Update the column type for this specific column
@@ -732,14 +805,20 @@ function changeFieldType(e) {
     for (let i = 1; i < table.rows.length; i++) {
         let cell = table.rows[i].cells[columnIndex];
         switch (newType) {
-            case 'String':
-                cell.innerHTML = generateRandomString(1);
+            case 'String(4-7,OrgId)':
+                cell.innerHTML = generateRandomStringNumber(4,7);
                 break;
-            case 'Number':
-                cell.innerHTML = generateRandomNumber(1);
+            case 'String(36,FieldGuid)':
+                cell.innerHTML = generateRandomString(36);
+                break;
+            case 'String(OperationType)':
+                cell.innerHTML = generateRandomOperation();
                 break;
             case 'Date':
                 cell.innerHTML = generateRandomDate();
+                break;
+            case 'Number':
+                cell.innerHTML = generateRandomNumber(1);
                 break;
         }
     }
