@@ -12,8 +12,13 @@ app = Flask(__name__)
 # initializing
 
 @app.route('/')
+def home():
+    # Renders the homepage
+    return render_template('home.html')
+
+@app.route('/index')
 def index():
-    # Renders the main page
+    # Renders the main application page
     return render_template('index.html')
 
 @app.route('/analyze', methods=['POST'])
