@@ -51,7 +51,7 @@ def analyze():
             f'User\'s changes: {user_input}\n'
             f'Table data: {table}'
         )
-    else:
+    elif context == 'customization':
 
         content = (
             "Execute the specified SQL operations expressed in natural language on the provided tables. "
@@ -68,6 +68,9 @@ def analyze():
             f'User Operations: {user_input}\n'
             f'Table data: {table}'
         )
+    elif context == 'export':
+        # fill in code in the content
+        content = ()
 
     messages = [
         {
