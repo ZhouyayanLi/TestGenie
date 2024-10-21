@@ -14,14 +14,6 @@ body {
 }
 
 
-/* Header
-h1 {
-    text-align: center;
-    margin: 20px 0;
-    color: #4CAF50; 
-    font-size: 2.5em;
-} */
-
 /* Header */
 header {
     display: flex;
@@ -41,6 +33,12 @@ h1 {
     margin: 0;
     font-size: 35px;
     color: #127315;
+}
+
+h2 {
+    margin-top: 10px;
+    font-size: 30px;
+    color: #19701c;
 }
 
 /* Top-right links */
@@ -366,14 +364,20 @@ h1 {
         margin-bottom: 10px; /* Spacing between dropdowns */
     }
 
-    .buttons-container {
+    .buttons-container,
+    .result-button-container {
         flex-direction: column; /* Stack buttons vertically */
         align-items: stretch; /* Stretch buttons to full width */
     }
 
-    .buttons-container button {
+    .buttons-container button,
+    .result-button-container button {
         width: 100%; /* Full width for buttons */
         margin-bottom: 10px; /* Spacing between buttons */
+    }
+
+    .result-table {
+        width: 100%;
     }
 }
 
@@ -474,14 +478,15 @@ h1 {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
+    height: 96vh;
     background-color: #f9f9f9; /* Light background */
     border: 5px solid #4CAF50; /* Green border */
     border-radius: 15px; /* Rounded corners */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Shadow for depth */
-    padding: 20px;
+    padding: 10px; 
     margin: 10px;
     text-align: center; /* Center text */
+    box-sizing: border-box;
 }
 
 .homepage h1 {
@@ -511,25 +516,40 @@ h1 {
 }
 
 
-
-
-/* new changes*/
 .primary-key {
     background-color: #75b032; 
     color: white;
 }
 
 .result-table-container {
+    display: flex;
     margin-top: 20px;
+    justify-content: center; 
+    flex-direction: column;
 }
 
 .table-container {
     margin-bottom: 10px;
 }
 
+
+.result-table {                     
+    border-collapse: collapse; 
+}
+
 .result-table th, .result-table td {
-    background-color: #f4f4f4; 
+    background-color: #f4f4f4;
     color: #333;
+    padding: 10px;            
+    text-align: left;           
+    border: 1px solid #ddd;     
+}
+
+
+.result-table th {
+    background-color: #6c6969;
+    color: #fff;
+    font-weight: bold;
 }
 
 
@@ -539,13 +559,28 @@ h1 {
     font-style: italic;
 }
 
-.result-table-container .add-relationships-button {
+
+.result-button-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px; 
+    margin-top: 20px;
+}
+
+
+.result-button-container button {
     margin: 5px;
     padding: 8px 16px;
     cursor: pointer;
-    background-color: #2660f4;
+    background-color: #184ccf;
     color: white;
     border: none;
     border-radius: 4px;
     display: block; 
 }
+
+.result-button-container button:hover {
+    background-color: #082776;
+    transform: translateY(-2px);
+}
+
