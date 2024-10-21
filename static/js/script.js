@@ -37,17 +37,120 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
+function readResultTable() {
+    // Get the result table element
+    let table = document.querySelector('#resultTableContainer .result-table');
+
+    let tableData = {
+        columns: [],
+        rows: []
+    };
+
+    // Check if the table exists
+    if (table) {
+        let headerCells = table.rows[0].cells;
+        for (let i = 0; i < headerCells.length; i++) {
+            tableData.columns.push(headerCells[i].innerText || `Column ${i+1}`);
+        }
+
+        for (let i = 1; i < table.rows.length; i++) {
+            let row = table.rows[i];
+            let rowData = [];
+            for (let j = 0; j < row.cells.length; j++) {
+                rowData.push(row.cells[j].innerText);
+            }
+            tableData.rows.push(rowData);
+        }
+    } else {
+        console.error('Table not found in the DOM.');
+    }
+    
+    return tableData;
+
+} 
+
+
+function downloadJSON(jsonData) {
+    let jsonString;
+
+    // Check if jsonData is an object and convert it to a string
+    if (typeof jsonData === 'object') {
+        jsonString = JSON.stringify(jsonData, null, 4); // Pretty print with 4-space indentation
+    } else if (typeof jsonData === 'string') {
+        // If it's already a string, ensure it's valid JSON
+        try {
+            JSON.parse(jsonData); // This will throw an error if not valid JSON
+            jsonString = jsonData;
+        } catch (e) {
+            console.error('Invalid JSON string provided:', e);
+            return;
+        }
+    } else {
+        console.error('Invalid input: jsonData must be an object or a valid JSON string.');
+        return;
+    }
+    
+    
+    // Create a Blob with the JSON string and specify the MIME type
+    const blob = new Blob([jsonString], { type: 'application/json' });
+
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'output.json';
+
+    // Append the link to the document body
+    document.body.appendChild(link);
+
+    // Programmatically click the link to trigger the download
+    link.click();
+
+    // Clean up by removing the link and revoking the object URL
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+}
+
 
 function exportResults() {
-    // Implement this function
 
-    // this function will return data in all parent tables
-    let tableData = readTableData(tableId);
+    // Get parent tables
+    let tableData = readTableData();  
+    
+    // Get result table 
+    tableData['Result Table'] = readResultTable();
 
-    // you should be able to get result table data by hacking into this object 'resultTableContainer' 
-    // addResultTable(data) adds the result table for display, and could be helpful
+    console.log('check export: ', tableData);
 
-    // to connect this request to GPT, refering to sendCustomizationRequest() and sendRelationshipRequest()
+    fetch('/analyze', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            tables: tableData,  // Passing all tables data for potential cross-table operations
+            context: 'export'  // Explicitly defining the context as adding relationships
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (typeof data.result === 'string') {
+            // Remove the unwanted parts of the string
+            let cleanString = data.result.replace(/```json\n|\n```/g, '');
+
+            // Attempt to parse the cleaned string as JSON
+            try {
+                data.result = JSON.parse(cleanString);
+                console.log('Parsed data.result (relationship):', data.result);
+                // Call download function
+                downloadJSON(data.result);
+            } catch (error) {
+                console.error('Parsing error:', error);
+            }
+        } else if (data.result) {
+            downloadJSON(data.result);
+        }
+    })
+    .catch(error => console.error('Error:', error));
 }
 
 function resetTable(tableId) {
@@ -156,7 +259,20 @@ function sendRelationshipRequest() {
 
 function addResultTable(data) {
 
+    // Making headers of parent tables editable
+    let allTables = document.querySelectorAll('.dynamic-table');
+    allTables.forEach((table, index) =>{
+        let headerCells = table.rows[0].cells;
+
+        for (let i = 0; i < headerCells.length; i++) {
+            headerCells[i].contentEditable = "true";
+        }
+    });
+
     let resultContainer = document.getElementById('resultTableContainer');
+
+    let resultButtonContainer = document.createElement('div');
+    resultButtonContainer.className = 'result-button-container';
 
     // If the container already exists, clear its contents
     if (resultContainer) {
@@ -179,7 +295,6 @@ function addResultTable(data) {
     data.columns.forEach((column, index) => {
         let headerCell = document.createElement('th');
         headerCell.innerText = `Column ${index + 1}`;
-        headerCell.className = 'non-editable';  // Ensure headers are non-editable
         headerCell.contentEditable = "true";
         headerRow.appendChild(headerCell);
     });
@@ -199,11 +314,15 @@ function addResultTable(data) {
 
     // Create and append the "Add Relationship" button
     let addRelationshipsButton = createAddRelationshipsButton();  // Assuming this function already exists
-    resultContainer.appendChild(addRelationshipsButton);
+    resultButtonContainer.appendChild(addRelationshipsButton);
 
     // Create and append the "Export Results" button
-    let exportResultButton = createControlButton('Export', () => exportResults, 'export'); 
-    resultContainer.appendChild(exportResultButton);
+    let exportResultButton = createControlButton('Export', () => exportResults(), 'export'); 
+    exportResultButton.classList.add('export-button');
+
+    resultButtonContainer.appendChild(exportResultButton);
+
+    resultContainer.appendChild(resultButtonContainer);
 
     // Append the result table container to the main container in your document
     document.getElementById('mainContainer').appendChild(resultContainer);
@@ -694,7 +813,7 @@ function addRow(tableId) {
 function removeLastRow(tableId) {
     let table = document.getElementById(tableId);
     if (!table || table.rows.length <= 1) {
-        console.warn("No rows to remove");
+        alert("No rows to remove");
         return; // Skip if there are no rows or only the header row
     }
 
@@ -759,7 +878,7 @@ function addColumn(tableId) {
 function removeLastColumn(tableId) {
     let table = document.getElementById(tableId);
     if (!table || table.rows[0].cells.length <= 1) {
-        console.warn("No columns to remove");
+        alert("No columns to remove");
         return; // Skip if there are no columns to remove
     }
 
