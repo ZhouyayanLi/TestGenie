@@ -32,7 +32,7 @@ def analyze():
 
     # This endpoint handles the LLM input processing
     data = request.json
-    user_input = data['input']
+    user_input = data.get('input')
     table = data['tables']
     context = data['context']
 
@@ -75,8 +75,18 @@ def analyze():
         )
 
     elif context == 'export':
-        # fill in code in the content
-        content = ()
+        content = (
+            "You are given a string that contains data for one or more tables. Each table includes a name, columns, and rows.\n\n"
+            "Your **task** is to parse the input string and convert it into JSON with the following structure:\n\n"
+            "- Each table name becomes a key in the JSON object.\n"
+            "- The value for each key is a list of dictionaries, one for each row.\n"
+            "- Each dictionary maps column names to their corresponding cell values.\n\n"
+            "**Requirements:**\n\n"
+            "- Preserve data types where possible (e.g., numbers remain numbers, strings remain strings).\n"
+            "- Ignore any inconsistencies or minor formatting errors in the input and do your best to parse it correctly.\n"
+            "- **Do not include any explanations, descriptions, or additional text; output only the JSON data.**\n\n"
+            f'Table data: {table}'
+        )
 
     messages = [
         {
