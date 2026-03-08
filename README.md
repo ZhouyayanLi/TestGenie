@@ -9,7 +9,7 @@ TestGenie is a **Gen-AI powered record and table generator** that enables users 
 - **Flask Backend and LLM Integration**: TestGenie relies on a Flask-based backend, leveraging Large Language Models (LLMs) to process user commands, interpret their meaning, and apply changes accordingly.
 
 ## Development Journey
-This project was initially developed by **Dr. Zhouyayan Li**, who designed and built **80% of the functional modules** and laid the foundation for the entire application structure and logic. The app was later enhanced by a **team of 5**, under the leadership of **Dr. Li**, to finalize the **UI design**, address **backend-frontend integration** issues, and improve the **result export** functionality.
+This project was initially developed by **Dr. Zhouyayan Li**, who designed and built **80% of the functional modules** and laid the foundation for the entire application structure and logic. The app was later enhanced by **Arash Ghaffar, Mansi Mohan Sharma, Mohammadreza Moeini, William Chen, and Zhouyayan Li**, to finalize the **UI design**, address **backend-frontend integration** issues, and improve the **result export** functionality.
 
 
 ## Key Highlights
